@@ -16,6 +16,8 @@ Currently this only works if the image is **fixed or absolutely positioned**.
 ![Waldo Demo](https://i.imgur.com/kTmlFfl.png)
 
 [**Check out the Waldo Demo live**](https://pamblam.github.io/zoomable/)
+
+![Here's Waldo](https://i.imgur.com/bxChe89.png)
 	
 There are several options available, which you can pass to the function: `zoomable(img, options)`.
 
