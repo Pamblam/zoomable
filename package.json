@@ -1,0 +1,19 @@
+{
+  "name": "zoomable",
+  "version": "1.0.0",
+  "description": "A Javascript configurable thingy that makes your images zoomable.",
+  "main": "zoomable.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://pamblam@github.com/Pamblam/zoomable.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pamblam/zoomable/issues"
+  },
+  "homepage": "https://github.com/Pamblam/zoomable#readme"
+}

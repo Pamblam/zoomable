@@ -64,10 +64,16 @@ const zoomable = (()=>{
 			 */
 			this.scale = null;
 			
+			/**
+			 * The z-index of the magnifying glass
+			 */
+			this.canvasZIndex = null;
+			
 			this.initZoomable();
 		}
 		
 		initZoomable(){
+			this.canvasZIndex = this.getGreatestZIndex()+1;
 			this.normalizeOpts();
 			this.loadImg().then(()=>{
 				this.replaceImg();
@@ -95,10 +101,14 @@ const zoomable = (()=>{
 				this.active = false;
 				this.canvas.parentNode.removeChild(this.canvas);
 			});
+			addEventListener('resize', e=>{
+				this.oBounds = this.oImg.getBoundingClientRect();
+			});
 		}
 		
 		renderCanvas(){
 			this.canvas = document.createElement('canvas');
+			this.canvas.style.zIndex = this.canvasZIndex;
 			this.canvas.style.width = this.opts.magWidth;
 			this.canvas.style.height = this.opts.magHeight;
 			this.canvas.style.border = this.opts.magBorder;
@@ -108,6 +118,25 @@ const zoomable = (()=>{
 			this.canvas.style.boxShadow = this.opts.boxShadow;
 			this.canvas.style.background = this.opts.background;
 			this.ctx = this.canvas.getContext('2d');
+		}
+		
+		getGreatestZIndex() {
+			var idx = 1, s;
+			var sheets = Array.from(document.styleSheets);
+			for (let i = sheets.length; i--; ) {
+				let rules = Array.from(sheets[i].cssRules || sheets[i].rules);
+				for (let n = rules.length; n--; ) {
+					if (!(rules[n] instanceof CSSStyleRule)) continue;
+					s = rules[n].style.getPropertyValue('z-index');
+					if (s > idx) idx = parseInt(s);
+				}
+			}
+			var eles = Array.from(document.querySelectorAll('*'));
+			for (let i = eles.length; i--; ) {
+				s = eles[i].style.getPropertyValue('z-index');
+				if (s > idx) idx = parseInt(s);
+			}
+			return idx;
 		}
 		
 		paintCanvas(mouseEvt){
@@ -121,27 +150,17 @@ const zoomable = (()=>{
 				this.canvas.height = cbox.height;
 			}
 			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-			
-			var halfCanvasWidth = (this.cWidth/2);//*this.scale;
-			var halfCanvasHeight = (this.cHeight/2);//*this.scale;
-			
-			var xpos = mouseEvt.clientX - this.oBounds.left		
-			var ypos = mouseEvt.clientY - this.oBounds.top
-			var relativeX = xpos * this.scale;
-			var relativeY = ypos * this.scale;
-
-			//console.log(this.cWidth, this.cHeight);
-
-			var sx = relativeX, 
-				sy = relativeY, 
-				sWidth = this.cWidth*this.scale/this.opts.zoomlevel, 
-				sHeight = this.cHeight*this.scale/this.opts.zoomlevel, 
-				dx = 0, //halfCanvasWidth, 
-				dy = 0, //halfCanvasHeight, 
-				dWidth = this.cWidth*2,
-				dHeight = this.cHeight*2;
-				
-			this.ctx.drawImage(this.nImg, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+			this.ctx.drawImage(
+				this.nImg, 
+				(mouseEvt.clientX - this.oBounds.left) * this.scale, 
+				(mouseEvt.clientY - this.oBounds.top) * this.scale, 
+				this.cWidth*this.scale/this.opts.zoomlevel, 
+				this.cHeight*this.scale/this.opts.zoomlevel, 
+				0, 
+				0, 
+				this.cWidth*2, 
+				this.cHeight*2
+			);
 		}
 		
 		getNaturalImg(){
@@ -156,28 +175,24 @@ const zoomable = (()=>{
 		getImgCSS(){
 			var styles = getComputedStyle(this.oImg, null);
 			var s = [];
-			for(let i=styles.length; i--;) 
+			for(let i=styles.length; i--;)
 				s.push(`${styles[i]}:${styles.getPropertyValue(styles[i])};`);
 			return s.join('');
 		}
 		
 		replaceImg(){
+			var styles = this.getImgCSS();
 			this.oBounds = this.oImg.getBoundingClientRect();
-			this.div = document.createElement('div');
-			this.oImg.parentNode.replaceChild(this.div, this.oImg);
-			
-			this.div.style.cssText = this.getImgCSS();
+			this.div = document.createElement('div');			
+			this.div.style.cssText = styles;
 			this.div.style.width = this.oBounds.width+"px";
-			this.div.style.minWidth = this.oBounds.width+"px";
-			this.div.style.maxWidth = this.oBounds.width+"px";
 			this.div.style.height = this.oBounds.height+"px";
-			this.div.style.minHeight = this.oBounds.height+"px";
-			this.div.style.maxHeight = this.oBounds.height+"px";
 			this.div.style.overflow = 'hidden';
 			this.div.style.background = `url(${this.src})`;
 			this.div.style.backgroundRepeat = 'no-repeat';
-			this.div.style.backgroundSize = `${this.oBounds.width}px ${this.oBounds.height}px`;
+			this.div.style.backgroundSize = 'contain';
 			this.div.style.cursor = "zoom-in";
+			this.oImg.parentNode.replaceChild(this.div, this.oImg);
 		}
 		
 		loadImg(){
